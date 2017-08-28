@@ -42,6 +42,7 @@ end
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(awful.util.get_themes_dir() .. "default/theme.lua")
+beautiful.init(awful.util.getdir("config") .. "themes/default/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
@@ -120,16 +121,6 @@ mykeyboardlayout = awful.widget.keyboardlayout()
 -- {{{ Wibar
 -- Create a textclock widget
 mytextclock = wibox.widget.textclock()
-
-acpiWidget = wibox.widget.textbox()
-acpiTimer = timer({ timeout = 60 })
-acpiUpdate = function ()
-	local output = io.popen("acpi")
-	acpiWidget.text = output:read()
-	output:close()
-end
-acpiUpdate()
-acpiTimer:add_signal("timeout", acpiUpdate)
 
 -- Create a wibox for each screen and add it
 local taglist_buttons = awful.util.table.join(
@@ -231,6 +222,9 @@ awful.screen.connect_for_each_screen(function(s)
             wibox.widget.systray(),
 	    acpiWidget,
             mytextclock,
+	    wibox.widget.textbox('    '),
+	    awful.widget.watch('acpi', 60),
+	    wibox.widget.textbox('    '),
             s.mylayoutbox,
         },
     }
@@ -559,4 +553,6 @@ client.connect_signal("focus", function(c) c.border_color = beautiful.border_foc
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
 
-local r = require("runonce")
+awful.spawn("kmix")
+awful.spawn("nm-appley");
+
