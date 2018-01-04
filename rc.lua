@@ -262,6 +262,8 @@ globalkeys = awful.util.table.join(
         end,
         {description = "focus previous by index", group = "client"}
     ),
+    awful.key({ modkey,           }, "q", function () awful.spawn("qutebrowser") end,
+              { description = "execute browser", group = "awesome" }),
     awful.key({ modkey,           }, "w", function () mymainmenu:show() end,
               {description = "show main menu", group = "awesome"}),
 
