@@ -286,6 +286,11 @@ globalkeys = awful.util.table.join(
             end
         end,
         {description = "go back", group = "client"}),
+    awful.key({ modkey,           }, "F1", function () awful.spawn("xrandr_detached_layout") end,
+              {description = "switch to detached layout", group = "screen"}),
+    awful.key({ modkey,           }, "F2", function () awful.spawn("xrandr_office_layout") end,
+              {description = "switch to office layout", group = "screen"}),
+
 
     -- Standard program
     awful.key({ modkey,           }, "Return", function () awful.spawn(terminal) end,
