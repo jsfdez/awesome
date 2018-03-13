@@ -165,6 +165,10 @@ local tasklist_buttons = awful.util.table.join(
                                               awful.client.focus.byidx(-1)
                                           end))
 
+function lock_screen()
+    awful.spawn("lxlock")
+end
+
 local function set_wallpaper(s)
     -- Wallpaper
     if beautiful.wallpaper then
@@ -286,6 +290,8 @@ globalkeys = awful.util.table.join(
             end
         end,
         {description = "go back", group = "client"}),
+    awful.key({ modkey,           }, "Scroll_Lock", function () lock_screen() end,
+              {description = "lock the screen", group = "screen"}),
     awful.key({ modkey,           }, "F1", function () awful.spawn("xrandr_detached_layout") end,
               {description = "switch to detached layout", group = "screen"}),
     awful.key({ modkey,           }, "F2", function () awful.spawn("xrandr_office_layout") end,
