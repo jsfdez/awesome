@@ -122,6 +122,27 @@ mykeyboardlayout = awful.widget.keyboardlayout()
 -- Create a textclock widget
 mytextclock = wibox.widget.textclock()
 
+local battery_widget = require("battery-widget")
+local BAT0 = battery_widget {
+    adapter = "BAT0",
+    ac_prefix = "AC: ",
+    battery_prefix = "Bat: ",
+    limits = {
+        { 25, "red"    },
+        { 50, "orange" },
+        {100, "green" }
+    },
+    listen = true,
+    timeout = 10,
+    widget_text = "${AC_BAT}${color_on}${percent}%${color_off}",
+    widget_font = "Deja Vu Sans Mono 16",
+    tooltip_text = "Battery ${state}${time_est}\nCapacity: ${capacity_percent}%",
+    alert_threshold = 5,
+    alert_timeout = 0,
+    alert_title = "Low battery !",
+    alert_text = "${AC_BAT}${time_est}"
+}
+
 -- Create a wibox for each screen and add it
 local taglist_buttons = awful.util.table.join(
                     awful.button({ }, 1, function(t) t:view_only() end),
@@ -224,10 +245,8 @@ awful.screen.connect_for_each_screen(function(s)
             layout = wibox.layout.fixed.horizontal,
             mykeyboardlayout,
             wibox.widget.systray(),
-            acpiWidget,
+            require("battery-widget") {},
             mytextclock,
-            wibox.widget.textbox('    '),
-            awful.widget.watch('acpi', 60),
             wibox.widget.textbox('    '),
             s.mylayoutbox,
         },
@@ -566,6 +585,6 @@ client.connect_signal("focus", function(c) c.border_color = beautiful.border_foc
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
 
-awful.spawn("kmix")
+awful.spawn("kmix --keepvisibility")
 awful.spawn("nm-applet");
 
