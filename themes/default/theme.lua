@@ -6,23 +6,23 @@ local theme = {}
 
 local awful = require("awful")
 
-theme.font          = "sans 11"
+theme.font          = "Liberation Mono 10"
 
 theme.bg_normal     = "black"
-theme.bg_focus      = "#062F4F"
+theme.bg_focus      = "#005b96"
 theme.bg_urgent     = "#ff0000"
 theme.bg_minimize   = "#444444"
 theme.bg_systray    = theme.bg_normal
 
 theme.fg_normal     = "white"
-theme.fg_focus      = "#ffffff"
+theme.fg_focus      = "white"
 theme.fg_urgent     = "#ffffff"
 theme.fg_minimize   = "#ffffff"
 
 theme.useless_gap   = 0
 theme.border_width  = 1
 theme.border_normal = "#000000"
-theme.border_focus  = "#535d6c"
+theme.border_focus  = "#4cb25d"
 theme.border_marked = "#91231c"
 
 -- There are other variable sets
