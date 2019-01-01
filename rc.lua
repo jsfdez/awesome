@@ -44,6 +44,8 @@ end
 beautiful.init(awful.util.get_themes_dir() .. "default/theme.lua")
 beautiful.init(awful.util.getdir("config") .. "themes/default/theme.lua")
 
+beautiful.notification_icon_size = 64
+
 -- This is used later as the default terminal and editor to run.
 terminal = "x-terminal-emulator"
 editor = os.getenv("EDITOR") or "editor"
@@ -122,27 +124,6 @@ mykeyboardlayout = awful.widget.keyboardlayout()
 -- Create a textclock widget
 mytextclock = wibox.widget.textclock()
 
-local battery_widget = require("battery-widget")
-local BAT0 = battery_widget {
-    adapter = "BAT0",
-    ac_prefix = "AC: ",
-    battery_prefix = "Bat: ",
-    limits = {
-        { 25, "red"    },
-        { 50, "orange" },
-        {100, "green" }
-    },
-    listen = true,
-    timeout = 10,
-    widget_text = "${AC_BAT}${color_on}${percent}%${color_off}",
-    widget_font = "Deja Vu Sans Mono 16",
-    tooltip_text = "Battery ${state}${time_est}\nCapacity: ${capacity_percent}%",
-    alert_threshold = 5,
-    alert_timeout = 0,
-    alert_title = "Low battery !",
-    alert_text = "${AC_BAT}${time_est}"
-}
-
 -- Create a wibox for each screen and add it
 local taglist_buttons = awful.util.table.join(
                     awful.button({ }, 1, function(t) t:view_only() end),
@@ -214,7 +195,11 @@ awful.screen.connect_for_each_screen(function(s)
     if s.geometry.width < s.geometry.height then
         layout = awful.layout.layouts[3]
     end
-    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, layout)
+    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8" }, s, layout)
+    awful.tag.add("9", {
+        layout = awful.layout.suit.max,
+        screen = s,
+    })
 
     -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt()
@@ -241,7 +226,7 @@ awful.screen.connect_for_each_screen(function(s)
         { -- Left widgets
             layout = wibox.layout.fixed.horizontal,
             -- mylauncher,
-            -- wibox.widget.textbox(s.index .. " "),
+            wibox.widget.textbox("Screen: <b>" .. s.index .. "</b> "),
             s.mytaglist,
             s.mypromptbox,
         },
@@ -250,9 +235,7 @@ awful.screen.connect_for_each_screen(function(s)
             layout = wibox.layout.fixed.horizontal,
             mykeyboardlayout,
             wibox.widget.systray(),
-            require("battery-widget") {},
             mytextclock,
-            wibox.widget.textbox('    '),
             s.mylayoutbox,
         },
     }
@@ -266,6 +249,10 @@ root.buttons(awful.util.table.join(
     awful.button({ }, 5, awful.tag.viewprev)
 ))
 -- }}}
+
+function run()
+    awful.screen.focused().mypromptbox:run()
+end
 
 -- {{{ Key bindings
 globalkeys = awful.util.table.join(
@@ -359,7 +346,7 @@ globalkeys = awful.util.table.join(
               {description = "restore minimized", group = "client"}),
 
     -- Prompt
-    awful.key({ modkey },            "r",     function () awful.screen.focused().mypromptbox:run() end,
+    awful.key({ modkey },            "r",     run,
               {description = "run prompt", group = "launcher"}),
 
     awful.key({ modkey }, "x",
@@ -391,8 +378,12 @@ clientkeys = awful.util.table.join(
     awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end,
               {description = "move to master", group = "client"}),
     awful.key({ modkey,           }, "o",      function (c) c:move_to_screen()               end,
-              {description = "move to screen", group = "client"}),
-    awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end,
+              {description = "move to next screen", group = "client"}),
+    awful.key({ modkey, "Shift"   }, "o",      function (c)
+                                                  c:move_to_screen(c.screen.index - 1) 
+                                               end,
+              {description = "move to previous screen", group = "client"}),
+     awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end,
               {description = "toggle keep on top", group = "client"}),
     awful.key({ modkey,           }, "n",
         function (c)
@@ -590,5 +581,7 @@ client.connect_signal("focus", function(c) c.border_color = beautiful.border_foc
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
 
-awful.spawn("kmix --keepvisibility")
+-- awful.spawn("QT_QPA_PLATFORMTHEME=generic kmix --keepvisibility")
+awful.spawn("kmix")
 awful.spawn("nm-applet");
+awful.spawn("xfce4-power-manager")
