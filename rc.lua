@@ -11,6 +11,8 @@ local naughty = require("naughty")
 local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup").widget
 
+naughty.config.defaults['icon_size'] = 100
+
 -- Load Debian menu entries
 require("debian.menu")
 
