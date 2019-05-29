@@ -45,11 +45,21 @@ end
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(awful.util.get_themes_dir() .. "default/theme.lua")
 beautiful.init(awful.util.getdir("config") .. "themes/default/theme.lua")
+beautiful.init("/usr/share/awesome/themes/cesious/theme.lua")
+beautiful.icon_theme        = "Papirus-Dark"
+beautiful.bg_normal         = "black"
+beautiful.bg_focus          = "#2EB398"
+beautiful.fg_focus          = "white"
+beautiful.font              = "Noto Sans Regular 10"
+beautiful.notification_font = "Noto Sans Bold 14"
+
+beautiful.wallpaper         = awful.util.getdir("config") .. "bg.jpg"
 
 beautiful.notification_icon_size = 64
 
 -- This is used later as the default terminal and editor to run.
-terminal = "x-terminal-emulator"
+--terminal = "x-terminal-emulator"
+terminal = "terminology"
 editor = os.getenv("EDITOR") or "editor"
 editor_cmd = terminal .. " -e " .. editor
 
