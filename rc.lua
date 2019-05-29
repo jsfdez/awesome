@@ -13,8 +13,8 @@ local hotkeys_popup = require("awful.hotkeys_popup").widget
 
 naughty.config.defaults['icon_size'] = 100
 
--- Load Debian menu entries
-require("debian.menu")
+-- Load menu
+local freedesktop = require("freedesktop")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -106,11 +106,13 @@ myawesomemenu = {
    { "quit", function() awesome.quit() end}
 }
 
-mymainmenu = awful.menu({ items = { { "awesome", myawesomemenu, beautiful.awesome_icon },
-                                    { "Debian", debian.menu.Debian_menu.Debian },
-                                    { "open terminal", terminal }
-                                  }
-                        })
+mymainmenu = freedesktop.menu.build({
+	icon_size = 32,
+	before =  {
+		{ "Awesome", myawesomemenu, "/usr/share/awesome/icons/awesome32.png" },
+	},
+	after = {},
+})
 
 mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
                                      menu = mymainmenu })
@@ -584,6 +586,13 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- }}}
 
 -- awful.spawn("QT_QPA_PLATFORMTHEME=generic kmix --keepvisibility")
-awful.spawn("kmix")
+awful.spawn("pa-applet")
 awful.spawn("nm-applet");
 awful.spawn("xfce4-power-manager")
+awful.spawn("xfsettingsd")
+awful.spawn("light-locker")
+awful.spawn("compton --shadow-exclude '!focused'")
+awful.spawn("pamac-tray")
+awful.spawn("blueman-applet")
+awful.spawn("msm_notifier")
+
