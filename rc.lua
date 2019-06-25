@@ -182,7 +182,7 @@ local tasklist_buttons = awful.util.table.join(
                                           end))
 
 function lock_screen()
-    awful.spawn("lxlock")
+    awful.spawn("gnome-screensaver-command -l")
 end
 
 local function set_wallpaper(s)
