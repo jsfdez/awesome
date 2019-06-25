@@ -494,7 +494,7 @@ awful.rules.rules = {
         class = {
           "Arandr",
           "Gpick",
-          "Kruler",
+          "kruler",
           "MessageWin",  -- kalarm.
           "Sxiv",
           "Wpa_gui",
