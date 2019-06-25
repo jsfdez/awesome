@@ -592,7 +592,8 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- }}}
 
 -- awful.spawn("QT_QPA_PLATFORMTHEME=generic kmix --keepvisibility")
-awful.spawn("pa-applet")
+awful.spawn("killall pa-applet")
+awful.spawn.single_instance("pa-applet", {}, function(c) return c.class == "pa-applet" end)
 awful.spawn("nm-applet");
 awful.spawn("xfce4-power-manager")
 awful.spawn("xfsettingsd")
