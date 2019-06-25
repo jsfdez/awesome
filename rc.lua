@@ -209,11 +209,7 @@ awful.screen.connect_for_each_screen(function(s)
     if s.geometry.width < s.geometry.height then
         layout = awful.layout.layouts[3]
     end
-    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8" }, s, layout)
-    awful.tag.add("9", {
-        layout = awful.layout.suit.max,
-        screen = s,
-    })
+    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, layout)
 
     -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt()
