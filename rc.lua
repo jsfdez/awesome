@@ -511,6 +511,12 @@ awful.rules.rules = {
         }
       }, properties = { floating = true }},
 
+    -- Maximized clients.
+    { rule_any = {
+	class = {
+	  "CaptureApp"},
+      }, properties = { maximized = true }},
+
     -- Add titlebars to normal clients and dialogs
     { rule_any = {type = { "normal", "dialog" }
       }, properties = { titlebars_enabled = false }
