@@ -500,7 +500,8 @@ awful.rules.rules = {
           "Wpa_gui",
           "pinentry",
           "veromix",
-          "xtightvncviewer"},
+          "xtightvncviewer",
+          "Capture 2"},
 
         name = {
           "Event Tester",  -- xev.
@@ -513,8 +514,7 @@ awful.rules.rules = {
 
     -- Maximized clients.
     { rule_any = {
-	class = {
-	  "CaptureApp"},
+	class = {},
       }, properties = { maximized = true }},
 
     -- Add titlebars to normal clients and dialogs
