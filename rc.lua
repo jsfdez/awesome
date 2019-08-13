@@ -47,8 +47,8 @@ beautiful.init(awful.util.get_themes_dir() .. "default/theme.lua")
 beautiful.init(awful.util.getdir("config") .. "themes/default/theme.lua")
 beautiful.init("/usr/share/awesome/themes/cesious/theme.lua")
 beautiful.icon_theme        = "Papirus-Dark"
-beautiful.bg_normal         = "black"
-beautiful.bg_focus          = "#2EB398"
+beautiful.bg_normal         = "#FFFFFF00"
+beautiful.bg_focus          = "#2EB39855"
 beautiful.fg_focus          = "white"
 beautiful.font              = "Noto Sans Regular 10"
 beautiful.notification_font = "Noto Sans Bold 14"
@@ -228,7 +228,7 @@ awful.screen.connect_for_each_screen(function(s)
     s.mytasklist = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, tasklist_buttons)
 
     -- Create the wibox
-    s.mywibox = awful.wibar({ position = "top", screen = s })
+    s.mywibox = awful.wibar({ position = "top", screen = s, bg = beautiful.bg_normal })
 
     -- Add widgets to the wibox
     s.mywibox:setup {
