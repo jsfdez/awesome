@@ -567,6 +567,35 @@ globalkeys =
         end,
         {description = 'restore minimized', group = 'client'}
     ),
+    awful.key(
+        { modkey },
+        ',',
+        function()
+            if naughty.is_suspended() == true then
+                naughty.resume()
+                naughty.notify(
+                    {
+                        preset = naughty.config.presets.info,
+                        title = 'naughty',
+                        text = 'Notifications are back!'
+                    }
+                )
+            else
+                naughty.notify(
+                    {
+                        preset = naughty.config.presets.info,
+                        title = 'naughty',
+                        text = 'Notifications are suspended!'
+                    }
+                )
+                naughty.suspend()
+            end
+        end,
+        {
+            description = 'toggle notifications',
+            group = 'awesome'
+        }
+    ),
     -- Prompt
     awful.key({modkey}, 'r', run, {description = 'run prompt', group = 'launcher'}),
     awful.key(
