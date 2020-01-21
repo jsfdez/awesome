@@ -818,7 +818,8 @@ awful.rules.rules = {
                 'xtightvncviewer'
             },
             name = {
-                'Event Tester' -- xev.
+                'Event Tester', -- xev.
+                'Control Bar ' -- Squish Control Bar
             },
             role = {
                 'AlarmWindow', -- Thunderbird's calendar.
