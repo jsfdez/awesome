@@ -463,7 +463,7 @@ globalkeys =
     ),
     awful.key(
         {modkey},
-        'F1',
+        'F3',
         function()
             awful.spawn('xrandr_detached_layout')
         end,
