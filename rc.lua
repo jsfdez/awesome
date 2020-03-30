@@ -64,7 +64,7 @@ beautiful.bg_normal = '#FFFFFF00'
 beautiful.bg_focus = '#2EB39855'
 beautiful.fg_focus = 'white'
 beautiful.font = 'Noto Sans Regular 10'
-beautiful.notification_font = 'Noto Sans Bold 14'
+beautiful.notification_font = 'Noto Sans Regular 10'
 
 beautiful.wallpaper = awful.util.getdir('config') .. 'bg.jpg'
 
