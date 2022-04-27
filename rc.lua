@@ -58,13 +58,13 @@ end
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(awful.util.get_themes_dir() .. 'default/theme.lua')
 beautiful.init(awful.util.getdir('config') .. 'themes/default/theme.lua')
-beautiful.init('/usr/share/awesome/themes/cesious/theme.lua')
+beautiful.init('/usr/share/awesome/themes/default/theme.lua')
 beautiful.icon_theme = 'Papirus-Dark'
 beautiful.bg_normal = '#FFFFFF00'
 beautiful.bg_focus = '#2EB39855'
 beautiful.fg_focus = 'white'
-beautiful.font = 'Noto Sans Regular 10'
-beautiful.notification_font = 'Noto Sans Regular 10'
+beautiful.font = 'Noto Sans Regular 11'
+beautiful.notification_font = 'Noto Sans Regular 11'
 
 beautiful.wallpaper = awful.util.getdir('config') .. 'bg.jpg'
 
