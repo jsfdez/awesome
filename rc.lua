@@ -87,6 +87,54 @@ awful.layout.layouts = {
 }
 -- }}}
 
+-- {{{ Quake Terminal
+local quake_terminal = nil
+
+function toggle_quake_terminal()
+    local screen = awful.screen.focused()
+
+    if quake_terminal and quake_terminal.valid then
+        if quake_terminal.hidden then
+            -- Show terminal
+            quake_terminal.hidden = false
+            quake_terminal:geometry({
+                x = 0,
+                y = 0,
+                width = screen.geometry.width,
+                height = screen.geometry.height * 0.5
+            })
+            quake_terminal.ontop = true
+            quake_terminal:raise()
+            client.focus = quake_terminal
+        else
+            -- Hide terminal
+            quake_terminal.hidden = true
+            quake_terminal:geometry({x = -9999, y = -9999, width = 1, height = 1})
+        end
+    else
+        -- Create new quake terminal
+        awful.spawn(terminal .. ' --title=QuakeTerminal', {
+            floating = true,
+            ontop = true,
+            sticky = true,
+            skip_taskbar = true,
+            callback = function(c)
+                quake_terminal = c
+                c:geometry({
+                    x = 0,
+                    y = 0,
+                    width = screen.geometry.width,
+                    height = screen.geometry.height * 0.5
+                })
+                c.hidden = false
+                c:raise()
+                client.focus = c
+            end
+        })
+    end
+end
+-- }}}
+
 -- {{{ Helper functions
 local function client_menu_toggle_fn()
     local instance = nil
@@ -125,19 +173,19 @@ end
 local function autostart()
     local apps = {
         'nm-applet',
-        'xfce4-power-manager', 
+        'xfce4-power-manager',
         'xfsettingsd',
         'light-locker',
         'blueman-applet',
         'pasystray',
         'pamac-tray'
     }
-    
+
     -- Kill all instances first, then start fresh
     for _, app in ipairs(apps) do
         awful.spawn('killall ' .. app .. ' 2>/dev/null || true')
     end
-    
+
     -- Small delay to ensure processes are killed
     gears.timer.start_new(1, function()
         for _, app in ipairs(apps) do
@@ -145,7 +193,7 @@ local function autostart()
         end
         return false -- Don't repeat timer
     end)
-    
+
     -- Handle specific cases
     awful.spawn('killall pa-applet 2>/dev/null || true')
 end
@@ -254,7 +302,7 @@ awful.screen.connect_for_each_screen(function(s)
         awful.button({}, 4, function() awful.layout.inc(1) end),
         awful.button({}, 5, function() awful.layout.inc(-1) end)
     ))
-    
+
     s.mytaglist = awful.widget.taglist(s, awful.widget.taglist.filter.all, taglist_buttons)
     s.mytasklist = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, tasklist_buttons)
 
@@ -290,18 +338,9 @@ root.buttons(gears.table.join(
 ))
 -- }}}
 
--- Enhanced run function with application completion
+-- Original simple run function
 function run()
-    awful.prompt.run {
-        prompt = 'Run: ',
-        textbox = awful.screen.focused().mypromptbox.widget,
-        completion_callback = awful.completion.shell,
-        exe_callback = function(cmd)
-            if not cmd or cmd:match("^%s*$") then return end
-            awful.spawn.with_shell(cmd)
-        end,
-        history_path = awful.util.get_cache_dir() .. '/history'
-    }
+    awful.screen.focused().mypromptbox:run()
 end
 
 -- Alternative: Use menubar for graphical app launcher
@@ -357,6 +396,10 @@ globalkeys = gears.table.join(
         {description = 'open a terminal', group = 'launcher'}),
     awful.key({modkey, 'Control'}, 'r', awesome.restart, {description = 'reload awesome', group = 'awesome'}),
 
+    -- Quake Terminal
+    awful.key({}, 'F12', toggle_quake_terminal, {description = 'toggle quake terminal', group = 'launcher'}),
+    awful.key({modkey}, 'grave', toggle_quake_terminal, {description = 'toggle quake terminal', group = 'launcher'}),
+
     -- Layout controls
     awful.key({modkey}, 'l', function() awful.tag.incmwfact(0.05) end,
         {description = 'increase master width factor', group = 'layout'}),
@@ -394,7 +437,7 @@ globalkeys = gears.table.join(
         else
             naughty.notify({
                 preset = naughty.config.presets.info,
-                title = 'naughty', 
+                title = 'naughty',
                 text = 'Notifications are suspended!'
             })
             naughty.suspend()
@@ -402,9 +445,10 @@ globalkeys = gears.table.join(
     end, {description = 'toggle notifications', group = 'awesome'}),
 
     -- Prompt and launcher
-    awful.key({modkey}, 'r', run, {description = 'run prompt with completion', group = 'launcher'}),
-    awful.key({modkey}, 'p', app_launcher, {description = 'application launcher', group = 'launcher'}),
+    awful.key({modkey}, 'r', run, {description = 'run prompt', group = 'launcher'}),
     awful.key({modkey}, '.', rofi_launcher, {description = 'rofi application launcher', group = 'launcher'}),
+    --awful.key({modkey}, '.', app_launcher, {description = 'application launcher', group = 'launcher'}),
+    awful.key({modkey, 'Control'}, '.', function() menubar.show() end, {description = 'show the menubar', group = 'launcher'}),
     awful.key({modkey}, 'x', function()
         awful.prompt.run {
             prompt = 'Run Lua code: ',
@@ -455,14 +499,14 @@ for i = 1, 9 do
             local tag = screen.tags[i]
             if tag then tag:view_only() end
         end, {description = 'view tag #' .. i, group = 'tag'}),
-        
+
         -- Toggle tag display
         awful.key({modkey, 'Control'}, '#' .. i + 9, function()
             local screen = awful.screen.focused()
             local tag = screen.tags[i]
             if tag then awful.tag.viewtoggle(tag) end
         end, {description = 'toggle tag #' .. i, group = 'tag'}),
-        
+
         -- Move client to tag
         awful.key({modkey, 'Shift'}, '#' .. i + 9, function()
             if client.focus then
@@ -470,7 +514,7 @@ for i = 1, 9 do
                 if tag then client.focus:move_to_tag(tag) end
             end
         end, {description = 'move focused client to tag #' .. i, group = 'tag'}),
-        
+
         -- Toggle tag on focused client
         awful.key({modkey, 'Control', 'Shift'}, '#' .. i + 9, function()
             if client.focus then
@@ -531,6 +575,17 @@ awful.rules.rules = {
             }
         },
         properties = {floating = true}
+    },
+    -- Quake terminal rule
+    {
+        rule = {name = 'QuakeTerminal'},
+        properties = {
+            floating = true,
+            ontop = true,
+            sticky = true,
+            skip_taskbar = true,
+            titlebars_enabled = false
+        }
     },
     -- Add titlebars to normal clients and dialogs
     {
