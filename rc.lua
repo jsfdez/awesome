@@ -169,6 +169,23 @@ function lock_screen()
     end)
 end
 
+-- Power management functions
+function hibernate()
+    awful.spawn('systemctl hibernate')
+end
+
+function suspend()
+    awful.spawn('systemctl suspend')
+end
+
+function reboot()
+    awful.spawn('systemctl reboot')
+end
+
+function poweroff()
+    awful.spawn('systemctl poweroff')
+end
+
 -- Auto-start applications function
 local function autostart()
     local apps = {
