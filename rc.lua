@@ -171,19 +171,103 @@ end
 
 -- Power management functions
 function hibernate()
-    awful.spawn('systemctl hibernate')
+    awful.prompt.run {
+        prompt = 'Hibernate system? (yes/no): ',
+        textbox = awful.screen.focused().mypromptbox.widget,
+        exe_callback = function(answer)
+            if answer:lower() == 'yes' or answer:lower() == 'y' then
+                naughty.notify({
+                    preset = naughty.config.presets.info,
+                    title = 'Power Management',
+                    text = 'Hibernating system...',
+                    timeout = 2
+                })
+                awful.spawn.with_shell('dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager.Hibernate boolean:true')
+            else
+                naughty.notify({
+                    preset = naughty.config.presets.info,
+                    title = 'Power Management',
+                    text = 'Hibernation cancelled',
+                    timeout = 2
+                })
+            end
+        end
+    }
 end
 
 function suspend()
-    awful.spawn('systemctl suspend')
+    awful.prompt.run {
+        prompt = 'Suspend system? (yes/no): ',
+        textbox = awful.screen.focused().mypromptbox.widget,
+        exe_callback = function(answer)
+            if answer:lower() == 'yes' or answer:lower() == 'y' then
+                naughty.notify({
+                    preset = naughty.config.presets.info,
+                    title = 'Power Management',
+                    text = 'Suspending system...',
+                    timeout = 2
+                })
+                awful.spawn.with_shell('systemctl suspend')
+            else
+                naughty.notify({
+                    preset = naughty.config.presets.info,
+                    title = 'Power Management',
+                    text = 'Suspend cancelled',
+                    timeout = 2
+                })
+            end
+        end
+    }
 end
 
 function reboot()
-    awful.spawn('systemctl reboot')
+    awful.prompt.run {
+        prompt = 'Reboot system? (yes/no): ',
+        textbox = awful.screen.focused().mypromptbox.widget,
+        exe_callback = function(answer)
+            if answer:lower() == 'yes' or answer:lower() == 'y' then
+                naughty.notify({
+                    preset = naughty.config.presets.info,
+                    title = 'Power Management',
+                    text = 'Rebooting system...',
+                    timeout = 2
+                })
+                awful.spawn.with_shell('systemctl reboot')
+            else
+                naughty.notify({
+                    preset = naughty.config.presets.info,
+                    title = 'Power Management',
+                    text = 'Reboot cancelled',
+                    timeout = 2
+                })
+            end
+        end
+    }
 end
 
 function poweroff()
-    awful.spawn('systemctl poweroff')
+    awful.prompt.run {
+        prompt = 'Power off system? (yes/no): ',
+        textbox = awful.screen.focused().mypromptbox.widget,
+        exe_callback = function(answer)
+            if answer:lower() == 'yes' or answer:lower() == 'y' then
+                naughty.notify({
+                    preset = naughty.config.presets.info,
+                    title = 'Power Management',
+                    text = 'Powering off system...',
+                    timeout = 2
+                })
+                awful.spawn.with_shell('systemctl poweroff')
+            else
+                naughty.notify({
+                    preset = naughty.config.presets.info,
+                    title = 'Power Management',
+                    text = 'Power off cancelled',
+                    timeout = 2
+                })
+            end
+        end
+    }
 end
 
 -- Auto-start applications function
@@ -200,19 +284,19 @@ local function autostart()
 
     -- Kill all instances first, then start fresh
     for _, app in ipairs(apps) do
-        awful.spawn('killall ' .. app .. ' 2>/dev/null || true')
+        awful.spawn('killall -9 ' .. app .. ' 2>/dev/null || true')
     end
 
-    -- Small delay to ensure processes are killed
-    gears.timer.start_new(1, function()
+    -- Also kill pa-applet
+    awful.spawn('killall -9 pa-applet 2>/dev/null || true')
+
+    -- Longer delay to ensure processes are killed
+    gears.timer.start_new(2, function()
         for _, app in ipairs(apps) do
             awful.spawn.single_instance(app)
         end
         return false -- Don't repeat timer
     end)
-
-    -- Handle specific cases
-    awful.spawn('killall pa-applet 2>/dev/null || true')
 end
 -- }}}
 
@@ -471,7 +555,8 @@ globalkeys = gears.table.join(
             prompt = 'Run Lua code: ',
             textbox = awful.screen.focused().mypromptbox.widget,
             exe_callback = awful.util.eval,
-            history_path = awful.util.get_cache_dir() .. '/history_eval'
+            history_path = awful.util.get_cache_dir() .. '/history_eval',
+            completion_callback = awful.completion.shell
         }
     end, {description = 'lua execute prompt', group = 'awesome'}),
 
