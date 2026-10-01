@@ -195,7 +195,11 @@ function hibernate()
     }
 end
 
-function suspend()
+function suspend(answer)
+    if answer:lower() == 'yes' or answer:lower() == 'y' then
+	awful.spawn.with_shell('systemctl suspend')
+	return true
+    end
     awful.prompt.run {
         prompt = 'Suspend system? (yes/no): ',
         textbox = awful.screen.focused().mypromptbox.widget,
