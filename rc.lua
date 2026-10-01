@@ -170,6 +170,10 @@ function lock_screen()
 end
 
 -- Power management functions
+-- Globals so the Lua prompt accepts suspend(y) / suspend(yes) without quotes
+y = 'yes'
+yes = 'yes'
+
 function hibernate()
     awful.prompt.run {
         prompt = 'Hibernate system? (yes/no): ',
@@ -196,7 +200,7 @@ function hibernate()
 end
 
 function suspend(answer)
-    if answer:lower() == 'yes' or answer:lower() == 'y' then
+    if answer == true or (type(answer) == 'string' and (answer:lower() == 'yes' or answer:lower() == 'y')) then
 	awful.spawn.with_shell('systemctl suspend')
 	return true
     end
