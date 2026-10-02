@@ -225,7 +225,6 @@ local function autostart()
     local apps = {
         'nm-applet',
         'xfce4-power-manager',
-        'xfsettingsd',
         'light-locker',
         'blueman-applet',
         'pasystray',
