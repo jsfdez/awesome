@@ -57,17 +57,20 @@ beautiful.fg_focus = 'white'
 beautiful.font = 'Noto Sans Regular 11'
 beautiful.notification_font = 'Noto Sans Regular 11'
 beautiful.notification_icon_size = 64
+beautiful.menu_font = 'Noto Sans Regular 13'
+beautiful.menu_height = 28
+beautiful.menu_width = 200
 
 -- Set wallpaper
 beautiful.wallpaper = gears.filesystem.get_configuration_dir() .. 'bg.jpg'
 
 -- Default applications
-terminal = 'gnome-terminal'
-editor = os.getenv('EDITOR') or 'nano'
-editor_cmd = terminal .. ' -e ' .. editor
+local terminal = 'gnome-terminal'
+local editor = os.getenv('EDITOR') or 'nano'
+local editor_cmd = terminal .. ' -e ' .. editor
 
 -- Default modkey (Super/Windows key)
-modkey = 'Mod4'
+local modkey = 'Mod4'
 
 -- Table of layouts
 awful.layout.layouts = {
@@ -170,112 +173,51 @@ function lock_screen()
 end
 
 -- Power management functions
--- Globals so the Lua prompt accepts suspend(y) / suspend(yes) without quotes
-y = 'yes'
-yes = 'yes'
 
-function hibernate()
+local function power_action(prompt_text, action_text, command)
     awful.prompt.run {
-        prompt = 'Hibernate system? (yes/no): ',
+        prompt = prompt_text,
         textbox = awful.screen.focused().mypromptbox.widget,
         exe_callback = function(answer)
             if answer:lower() == 'yes' or answer:lower() == 'y' then
                 naughty.notify({
                     preset = naughty.config.presets.info,
                     title = 'Power Management',
-                    text = 'Hibernating system...',
+                    text = action_text,
                     timeout = 2
                 })
-                awful.spawn.with_shell('dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager.Hibernate boolean:true')
+                awful.spawn.with_shell(command)
             else
                 naughty.notify({
                     preset = naughty.config.presets.info,
                     title = 'Power Management',
-                    text = 'Hibernation cancelled',
+                    text = 'Action cancelled',
                     timeout = 2
                 })
             end
         end
     }
+end
+
+function hibernate()
+    power_action('Hibernate system? (yes/no): ', 'Hibernating system...',
+        'dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager.Hibernate boolean:true')
 end
 
 function suspend(answer)
-    if answer == true or (type(answer) == 'string' and (answer:lower() == 'yes' or answer:lower() == 'y')) then
-	awful.spawn.with_shell('systemctl suspend')
-	return true
+    if answer == true or answer == 1 then
+        awful.spawn.with_shell('systemctl suspend')
+        return true
     end
-    awful.prompt.run {
-        prompt = 'Suspend system? (yes/no): ',
-        textbox = awful.screen.focused().mypromptbox.widget,
-        exe_callback = function(answer)
-            if answer:lower() == 'yes' or answer:lower() == 'y' then
-                naughty.notify({
-                    preset = naughty.config.presets.info,
-                    title = 'Power Management',
-                    text = 'Suspending system...',
-                    timeout = 2
-                })
-                awful.spawn.with_shell('systemctl suspend')
-            else
-                naughty.notify({
-                    preset = naughty.config.presets.info,
-                    title = 'Power Management',
-                    text = 'Suspend cancelled',
-                    timeout = 2
-                })
-            end
-        end
-    }
+    power_action('Suspend system? (yes/no): ', 'Suspending system...', 'systemctl suspend')
 end
 
 function reboot()
-    awful.prompt.run {
-        prompt = 'Reboot system? (yes/no): ',
-        textbox = awful.screen.focused().mypromptbox.widget,
-        exe_callback = function(answer)
-            if answer:lower() == 'yes' or answer:lower() == 'y' then
-                naughty.notify({
-                    preset = naughty.config.presets.info,
-                    title = 'Power Management',
-                    text = 'Rebooting system...',
-                    timeout = 2
-                })
-                awful.spawn.with_shell('systemctl reboot')
-            else
-                naughty.notify({
-                    preset = naughty.config.presets.info,
-                    title = 'Power Management',
-                    text = 'Reboot cancelled',
-                    timeout = 2
-                })
-            end
-        end
-    }
+    power_action('Reboot system? (yes/no): ', 'Rebooting system...', 'systemctl reboot')
 end
 
 function poweroff()
-    awful.prompt.run {
-        prompt = 'Power off system? (yes/no): ',
-        textbox = awful.screen.focused().mypromptbox.widget,
-        exe_callback = function(answer)
-            if answer:lower() == 'yes' or answer:lower() == 'y' then
-                naughty.notify({
-                    preset = naughty.config.presets.info,
-                    title = 'Power Management',
-                    text = 'Powering off system...',
-                    timeout = 2
-                })
-                awful.spawn.with_shell('systemctl poweroff')
-            else
-                naughty.notify({
-                    preset = naughty.config.presets.info,
-                    title = 'Power Management',
-                    text = 'Power off cancelled',
-                    timeout = 2
-                })
-            end
-        end
-    }
+    power_action('Power off system? (yes/no): ', 'Powering off system...', 'systemctl poweroff')
 end
 
 -- Auto-start applications function
@@ -290,21 +232,9 @@ local function autostart()
         'pamac-tray'
     }
 
-    -- Kill all instances first, then start fresh
     for _, app in ipairs(apps) do
-        awful.spawn('killall -9 ' .. app .. ' 2>/dev/null || true')
+        awful.spawn('killall ' .. app .. ' 2>/dev/null; ' .. app)
     end
-
-    -- Also kill pa-applet
-    awful.spawn('killall -9 pa-applet 2>/dev/null || true')
-
-    -- Longer delay to ensure processes are killed
-    gears.timer.start_new(2, function()
-        for _, app in ipairs(apps) do
-            awful.spawn.single_instance(app)
-        end
-        return false -- Don't repeat timer
-    end)
 end
 -- }}}
 
@@ -337,6 +267,241 @@ menubar.utils.terminal = terminal
 
 -- Keyboard map indicator and switcher
 mykeyboardlayout = awful.widget.keyboardlayout()
+
+-- Power profile widget
+-- Requires sudo access to system76-power without password.
+-- Set up with: sudo visudo
+-- Then add: %wheel ALL=(ALL) NOPASSWD: /usr/bin/system76-power
+-- (or replace %wheel with your username if not in wheel group)
+local power_manager = nil
+local function detect_power_manager()
+    local function file_exists(path)
+        local f = io.open(path, "r")
+        if f then
+            f:close()
+            return true
+        end
+        return false
+    end
+
+    if file_exists("/usr/bin/system76-power") or file_exists("/usr/local/bin/system76-power") then
+        return "system76-power"
+    elseif file_exists("/usr/bin/powerprofilesctl") or file_exists("/usr/local/bin/powerprofilesctl") then
+        return "powerprofilesctl"
+    elseif file_exists("/usr/bin/cpupower") or file_exists("/usr/local/bin/cpupower") then
+        return "cpupower"
+    end
+    return nil
+end
+
+power_manager = detect_power_manager()
+
+-- Power profile menu with dynamic commands
+local function get_power_commands()
+    if power_manager == "system76-power" then
+        return {
+            {'🔋 Battery', function() awful.spawn('sudo system76-power profile battery') end},
+            {'⚡ Balanced', function() awful.spawn('sudo system76-power profile balanced') end},
+            {'🔥 Performance', function() awful.spawn('sudo system76-power profile performance') end}
+        }
+    elseif power_manager == "powerprofilesctl" then
+        return {
+            {'🔋 Power Saver', function() awful.spawn('powerprofilesctl set power-saver') end},
+            {'⚡ Balanced', function() awful.spawn('powerprofilesctl set balanced') end},
+            {'🔥 Performance', function() awful.spawn('powerprofilesctl set performance') end}
+        }
+    else
+        return {
+            {'⚠️ No power manager found', function() end}
+        }
+    end
+end
+
+local powerprofile_menu = awful.menu({
+    items = get_power_commands()
+})
+
+local powerprofile_widget = wibox.widget.textbox()
+
+local function update_power_icon()
+    if not power_manager then
+        powerprofile_widget:set_text('❌')
+        return
+    end
+
+    local handle = io.popen('system76-power profile 2>/dev/null | head -1')
+    local result = handle:read("*a")
+    handle:close()
+
+    if result:find("Battery") then
+        powerprofile_widget:set_text('🔋')
+    elseif result:find("Performance") then
+        powerprofile_widget:set_text('🔥')
+    else
+        powerprofile_widget:set_text('⚡')
+    end
+end
+
+update_power_icon()
+
+-- Battery info tooltip
+local function get_battery_info()
+    local handle = io.popen('upower -i /org/freedesktop/UPower/devices/battery_BAT0 2>/dev/null')
+    local result = handle:read("*a")
+    handle:close()
+
+    local percentage = result:match("percentage:%s+(%d+)")
+    local time_to_empty = result:match("time to empty:%s+([%d,]+%s+%w+)")
+
+    if percentage then
+        return "🔋 " .. percentage .. "%\n⏱️ " .. (time_to_empty or "N/A")
+    end
+    return "Battery info unavailable"
+end
+
+-- Tooltip widget
+local battery_tooltip = awful.tooltip({
+    objects = { powerprofile_widget },
+    text = get_battery_info(),
+    timeout = 0.5
+})
+
+-- Poll power profile and battery every 2 seconds
+gears.timer({
+    timeout = 2,
+    autostart = true,
+    callback = function()
+        update_power_icon()
+        battery_tooltip:set_text(get_battery_info())
+    end
+})
+
+powerprofile_widget:buttons(gears.table.join(
+    awful.button({}, 1, function()
+        powerprofile_menu:toggle()
+    end),
+    awful.button({}, 3, function()
+        update_power_icon()
+    end)
+))
+
+-- Audio control widget
+local audio_widget = wibox.widget.textbox()
+audio_widget:set_text('🔊')
+
+local function get_volume()
+    local handle = io.popen('pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null')
+    local result = handle:read("*a")
+    handle:close()
+
+    local volume = tonumber(result:match("(%d+)%%"))
+    return math.floor(volume or 0)
+end
+
+local function is_muted()
+    local handle = io.popen('pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null')
+    local result = handle:read("*a")
+    handle:close()
+
+    return result:find("yes") ~= nil
+end
+
+local function update_audio_icon()
+    if is_muted() then
+        audio_widget:set_text('🔇')
+    else
+        local vol = get_volume()
+        if vol == 0 then
+            audio_widget:set_text('🔇')
+        elseif vol < 50 then
+            audio_widget:set_text('🔉')
+        else
+            audio_widget:set_text('🔊')
+        end
+    end
+end
+
+update_audio_icon()
+
+-- Audio control - simple mute toggle + scroll volume
+audio_widget:buttons(gears.table.join(
+    awful.button({}, 1, function()
+        awful.spawn('pactl set-sink-mute @DEFAULT_SINK@ toggle')
+        update_audio_icon()
+    end),
+    awful.button({}, 4, function()
+        awful.spawn('pactl set-sink-volume @DEFAULT_SINK@ +5%')
+        update_audio_icon()
+    end),
+    awful.button({}, 5, function()
+        awful.spawn('pactl set-sink-volume @DEFAULT_SINK@ -5%')
+        update_audio_icon()
+    end)
+))
+
+-- Poll audio state every 1 second
+gears.timer({
+    timeout = 1,
+    autostart = true,
+    callback = function()
+        update_audio_icon()
+    end
+})
+
+-- Keyboard backlight widget
+local kbd_backlight_widget = wibox.widget.textbox()
+
+local function get_kbd_brightness()
+    local f = io.open('/sys/class/leds/tpacpi::kbd_backlight/brightness', 'r')
+    if not f then return 0 end
+    local val = tonumber(f:read("*a"))
+    f:close()
+    return val or 0
+end
+
+local function update_kbd_icon()
+    local brightness = get_kbd_brightness()
+    if brightness == 0 then
+        kbd_backlight_widget:set_text('☀️')
+    else
+        kbd_backlight_widget:set_text('🌙')
+    end
+end
+
+update_kbd_icon()
+
+-- Keyboard backlight control
+kbd_backlight_widget:buttons(gears.table.join(
+    awful.button({}, 1, function()
+        local brightness = get_kbd_brightness()
+        local new_brightness = (brightness == 0) and 1 or 0
+        awful.spawn('sudo /home/jsfernandez/.config/awesome/kbd-backlight.sh ' .. new_brightness)
+        update_kbd_icon()
+    end),
+    awful.button({}, 4, function()
+        local brightness = get_kbd_brightness()
+        if brightness < 2 then
+            awful.spawn('sudo /home/jsfernandez/.config/awesome/kbd-backlight.sh ' .. (brightness + 1))
+            update_kbd_icon()
+        end
+    end),
+    awful.button({}, 5, function()
+        local brightness = get_kbd_brightness()
+        if brightness > 0 then
+            awful.spawn('sudo /home/jsfernandez/.config/awesome/kbd-backlight.sh ' .. (brightness - 1))
+            update_kbd_icon()
+        end
+    end)
+))
+
+-- Poll keyboard backlight state every 2 seconds
+gears.timer({
+    timeout = 2,
+    autostart = true,
+    callback = function()
+        update_kbd_icon()
+    end
+})
 
 -- {{{ Wibar
 -- Create a textclock widget
@@ -432,6 +597,9 @@ awful.screen.connect_for_each_screen(function(s)
             layout = wibox.layout.fixed.horizontal,
             mykeyboardlayout,
             wibox.widget.systray(),
+            kbd_backlight_widget,
+            audio_widget,
+            powerprofile_widget,
             mytextclock,
             s.mylayoutbox
         }
@@ -448,22 +616,17 @@ root.buttons(gears.table.join(
 -- }}}
 
 -- Original simple run function
-function run()
+local function run()
     awful.screen.focused().mypromptbox:run()
 end
 
--- Alternative: Use menubar for graphical app launcher
-function app_launcher()
-    menubar.show()
-end
-
 -- Rofi application launcher
-function rofi_launcher()
+local function rofi_launcher()
     awful.spawn('rofi -show drun')
 end
 
 -- {{{ Key bindings
-globalkeys = gears.table.join(
+local globalkeys = gears.table.join(
     awful.key({modkey}, 'F1', hotkeys_popup.show_help, {description = 'show help', group = 'awesome'}),
     awful.key({modkey}, 'Left', awful.tag.viewprev, {description = 'view previous', group = 'tag'}),
     awful.key({modkey}, 'Right', awful.tag.viewnext, {description = 'view next', group = 'tag'}),
@@ -566,14 +729,10 @@ globalkeys = gears.table.join(
             history_path = awful.util.get_cache_dir() .. '/history_eval',
             completion_callback = awful.completion.shell
         }
-    end, {description = 'lua execute prompt', group = 'awesome'}),
-
-    -- Menubar
-    awful.key({modkey, 'Control'}, '.', function() menubar.show() end,
-        {description = 'show the menubar', group = 'launcher'})
+    end, {description = 'lua execute prompt', group = 'awesome'})
 )
 
-clientkeys = gears.table.join(
+local clientkeys = gears.table.join(
     awful.key({modkey}, 'f', function(c)
         c.fullscreen = not c.fullscreen
         c:raise()
@@ -771,5 +930,7 @@ client.connect_signal('unfocus', function(c)
 end)
 -- }}}
 
--- Start applications
-autostart()
+-- Start applications only on initial startup, not on reload
+if awesome.startup then
+    autostart()
+end
