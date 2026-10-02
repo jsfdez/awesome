@@ -351,10 +351,21 @@ local function get_battery_info()
     handle:close()
 
     local percentage = result:match("percentage:%s+(%d+)")
-    local time_to_empty = result:match("time to empty:%s+([%d,]+%s+%w+)")
+    local hours_str = result:match("time to empty:%s+([%d,%.]+)%s+hours")
+
+    local time_str = "N/A"
+    if hours_str then
+        hours_str = hours_str:gsub(",", ".")
+        local hours_decimal = tonumber(hours_str)
+        if hours_decimal then
+            local hours = math.floor(hours_decimal)
+            local minutes = math.floor((hours_decimal - hours) * 60)
+            time_str = hours .. "h" .. minutes .. "m"
+        end
+    end
 
     if percentage then
-        return "🔋 " .. percentage .. "%\n⏱️ " .. (time_to_empty or "N/A")
+        return "🔋 " .. percentage .. "%\n⏱️ " .. time_str
     end
     return "Battery info unavailable"
 end
