@@ -323,28 +323,7 @@ local powerprofile_menu = awful.menu({
 
 local powerprofile_widget = wibox.widget.textbox()
 
-local function update_power_icon()
-    if not power_manager then
-        powerprofile_widget:set_text('❌')
-        return
-    end
-
-    local handle = io.popen('system76-power profile 2>/dev/null | head -1')
-    local result = handle:read("*a")
-    handle:close()
-
-    if result:find("Battery") then
-        powerprofile_widget:set_text('🔋')
-    elseif result:find("Performance") then
-        powerprofile_widget:set_text('🔥')
-    else
-        powerprofile_widget:set_text('⚡')
-    end
-end
-
-update_power_icon()
-
--- Battery info tooltip
+-- Battery info function
 local function get_battery_info()
     local handle = io.popen('upower -i /org/freedesktop/UPower/devices/battery_BAT0 2>/dev/null')
     local result = handle:read("*a")
@@ -370,12 +349,36 @@ local function get_battery_info()
     return "Battery info unavailable"
 end
 
--- Tooltip widget
-local battery_tooltip = awful.tooltip({
-    objects = { powerprofile_widget },
-    text = get_battery_info(),
-    timeout = 0.5
-})
+local function update_power_icon()
+    if not power_manager then
+        powerprofile_widget:set_text('❌')
+        return
+    end
+
+    local handle = io.popen('system76-power profile 2>/dev/null | head -1')
+    local result = handle:read("*a")
+    handle:close()
+
+    local icon = '⚡'
+    if result:find("Battery") then
+        icon = '🔋'
+    elseif result:find("Performance") then
+        icon = '🔥'
+    end
+
+    -- Get battery info
+    local battery_info = get_battery_info()
+    local percentage = battery_info:match("(%d+)%%")
+    local time_str = battery_info:match("⏱️%s+([^\n]+)")
+
+    if percentage and time_str then
+        powerprofile_widget:set_text(icon .. ' ' .. percentage .. '% ' .. time_str)
+    else
+        powerprofile_widget:set_text(icon)
+    end
+end
+
+update_power_icon()
 
 -- Poll power profile and battery every 2 seconds
 gears.timer({
@@ -383,7 +386,6 @@ gears.timer({
     autostart = true,
     callback = function()
         update_power_icon()
-        battery_tooltip:set_text(get_battery_info())
     end
 })
 
@@ -610,7 +612,9 @@ awful.screen.connect_for_each_screen(function(s)
             wibox.widget.systray(),
             kbd_backlight_widget,
             audio_widget,
+            wibox.widget.textbox(" | "),
             powerprofile_widget,
+            wibox.widget.textbox(" | "),
             mytextclock,
             s.mylayoutbox
         }
