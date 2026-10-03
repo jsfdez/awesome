@@ -252,6 +252,19 @@ mykeyboardlayout = awful.widget.keyboardlayout()
 -- Brightness widget with status checking
 local brightness_widget = wibox.widget.textbox()
 
+local function get_brightness()
+    local handle = io.popen('brightnessctl -m')
+    local result = handle:read("*a")
+    handle:close()
+
+    local current, max = result:match("([^,]+),[^,]+,([^,]+)")
+    if current and max then
+        local percentage = math.floor((tonumber(current) / tonumber(max)) * 100)
+        return percentage
+    end
+    return 0
+end
+
 local function check_brightness_setup()
     local handle = io.popen('which brightnessctl 2>/dev/null')
     local result = handle:read("*a")
@@ -283,19 +296,6 @@ if not brightness_ok then
     brightness_widget:set_text('⚠️')
 else
     brightness_widget:set_text('🖵 ' .. get_brightness() .. '%')
-end
-
-local function get_brightness()
-    local handle = io.popen('brightnessctl -m')
-    local result = handle:read("*a")
-    handle:close()
-
-    local current, max = result:match("([^,]+),[^,]+,([^,]+)")
-    if current and max then
-        local percentage = math.floor((tonumber(current) / tonumber(max)) * 100)
-        return percentage
-    end
-    return 0
 end
 
 local function update_brightness_icon()
