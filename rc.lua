@@ -253,14 +253,20 @@ mykeyboardlayout = awful.widget.keyboardlayout()
 local brightness_widget = wibox.widget.textbox()
 
 local function get_brightness()
-    local handle = io.popen('brightnessctl -m')
+    local handle = io.popen('sudo brightnessctl -m 2>/dev/null')
     local result = handle:read("*a")
     handle:close()
 
-    local current, max = result:match("([^,]+),[^,]+,([^,]+)")
-    if current and max then
-        local percentage = math.floor((tonumber(current) / tonumber(max)) * 100)
-        return percentage
+    if result and result ~= "" then
+        local current, max = result:match("([^,]+),[^,]+,([^,]+)")
+        if current and max then
+            local current_num = tonumber(current)
+            local max_num = tonumber(max)
+            if current_num and max_num and max_num > 0 then
+                local percentage = math.floor((current_num / max_num) * 100)
+                return percentage
+            end
+        end
     end
     return 0
 end
