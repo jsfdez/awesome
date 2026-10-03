@@ -282,7 +282,7 @@ if not brightness_ok then
     })
     brightness_widget:set_text('⚠️')
 else
-    brightness_widget:set_text('☀️')
+    brightness_widget:set_text('🖵 ' .. get_brightness() .. '%')
 end
 
 local function get_brightness()
@@ -305,15 +305,7 @@ local function update_brightness_icon()
     end
 
     local brightness = get_brightness()
-    if brightness == 0 then
-        brightness_widget:set_text('🌑')
-    elseif brightness < 33 then
-        brightness_widget:set_text('🌙')
-    elseif brightness < 66 then
-        brightness_widget:set_text('💡')
-    else
-        brightness_widget:set_text('☀️')
-    end
+    brightness_widget:set_text('🖵 ' .. brightness .. '%')
 end
 
 update_brightness_icon()
