@@ -258,14 +258,9 @@ local function get_brightness()
     handle:close()
 
     if result and result ~= "" then
-        local current, max = result:match("([^,]+),[^,]+,([^,]+)")
-        if current and max then
-            local current_num = tonumber(current)
-            local max_num = tonumber(max)
-            if current_num and max_num and max_num > 0 then
-                local percentage = math.floor((current_num / max_num) * 100)
-                return percentage
-            end
+        local percentage = result:match("([%d]+)%%")
+        if percentage then
+            return tonumber(percentage)
         end
     end
     return 0
