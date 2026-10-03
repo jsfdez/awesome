@@ -49,20 +49,14 @@ end
 -- Initialize theme
 beautiful.init(gears.filesystem.get_themes_dir() .. 'default/theme.lua')
 
--- Theme overrides
-beautiful.icon_theme = 'Papirus-Dark'
-beautiful.bg_normal = '#FFFFFF00'
-beautiful.bg_focus = '#2EB39855'
-beautiful.fg_focus = 'white'
-beautiful.font = 'Noto Sans Regular 11'
-beautiful.notification_font = 'Noto Sans Regular 11'
-beautiful.notification_icon_size = 64
-beautiful.menu_font = 'Noto Sans Regular 13'
-beautiful.menu_height = 28
-beautiful.menu_width = 200
+local function reload_module(name)
+    package.loaded[name] = nil
+    return require(name)
+end
 
--- Set wallpaper
-beautiful.wallpaper = gears.filesystem.get_configuration_dir() .. 'bg.jpg'
+function reload_theme_overrides()
+    reload_module('theme_overrides')(beautiful)
+end
 
 -- Default applications
 local terminal = 'gnome-terminal'
@@ -72,23 +66,10 @@ local editor_cmd = terminal .. ' -e ' .. editor
 -- Default modkey (Super/Windows key)
 local modkey = 'Mod4'
 
--- Table of layouts
-awful.layout.layouts = {
-    awful.layout.suit.tile,
-    awful.layout.suit.tile.left,
-    awful.layout.suit.tile.bottom,
-    awful.layout.suit.tile.top,
-    awful.layout.suit.fair,
-    awful.layout.suit.fair.horizontal,
-    awful.layout.suit.spiral,
-    awful.layout.suit.spiral.dwindle,
-    awful.layout.suit.max,
-    awful.layout.suit.max.fullscreen,
-    awful.layout.suit.magnifier,
-    awful.layout.suit.corner.nw,
-    awful.layout.suit.floating
-}
--- }}}
+function reload_layouts()
+    reload_module('layouts')()
+end
+reload_layouts()
 
 -- {{{ Quake Terminal
 local quake_terminal = nil
@@ -225,6 +206,7 @@ local function autostart()
     local apps = {
         'nm-applet',
         'xfce4-power-manager',
+        'xfsettingsd',
         'light-locker',
         'blueman-applet',
         'pasystray',
@@ -266,6 +248,102 @@ menubar.utils.terminal = terminal
 
 -- Keyboard map indicator and switcher
 mykeyboardlayout = awful.widget.keyboardlayout()
+
+-- Brightness widget with status checking
+local brightness_widget = wibox.widget.textbox()
+
+local function check_brightness_setup()
+    local handle = io.popen('which brightnessctl 2>/dev/null')
+    local result = handle:read("*a")
+    handle:close()
+
+    if result == "" then
+        return false, "brightnessctl not installed"
+    end
+
+    local handle = io.popen('sudo -n brightnessctl -m 2>/dev/null')
+    local result = handle:read("*a")
+    handle:close()
+
+    if result == "" then
+        return false, "sudo access not configured"
+    end
+
+    return true, nil
+end
+
+local brightness_ok, brightness_error = check_brightness_setup()
+if not brightness_ok then
+    naughty.notify({
+        preset = naughty.config.presets.critical,
+        title = 'Brightness Control Error',
+        text = brightness_error .. '\n\nTo fix: sudo visudo and add:\n%wheel ALL=(ALL) NOPASSWD: /usr/bin/brightnessctl',
+        timeout = 0
+    })
+    brightness_widget:set_text('⚠️')
+else
+    brightness_widget:set_text('☀️')
+end
+
+local function get_brightness()
+    local handle = io.popen('brightnessctl -m')
+    local result = handle:read("*a")
+    handle:close()
+
+    local current, max = result:match("([^,]+),[^,]+,([^,]+)")
+    if current and max then
+        local percentage = math.floor((tonumber(current) / tonumber(max)) * 100)
+        return percentage
+    end
+    return 0
+end
+
+local function update_brightness_icon()
+    if not brightness_ok then
+        brightness_widget:set_text('⚠️')
+        return
+    end
+
+    local brightness = get_brightness()
+    if brightness == 0 then
+        brightness_widget:set_text('🌑')
+    elseif brightness < 33 then
+        brightness_widget:set_text('🌙')
+    elseif brightness < 66 then
+        brightness_widget:set_text('💡')
+    else
+        brightness_widget:set_text('☀️')
+    end
+end
+
+update_brightness_icon()
+
+brightness_widget:buttons(gears.table.join(
+    awful.button({}, 1, function()
+        naughty.notify({
+            preset = naughty.config.presets.info,
+            title = 'Screen Brightness',
+            text = 'Current: ' .. get_brightness() .. '%',
+            timeout = 2
+        })
+    end),
+    awful.button({}, 4, function()
+        awful.spawn('sudo brightnessctl set +10%')
+        update_brightness_icon()
+    end),
+    awful.button({}, 5, function()
+        awful.spawn('sudo brightnessctl set 10%-')
+        update_brightness_icon()
+    end)
+))
+
+gears.timer({
+    timeout = 2,
+    autostart = true,
+    callback = function()
+        update_brightness_icon()
+    end
+})
 
 -- Power profile widget
 -- Requires sudo access to system76-power without password.
@@ -555,18 +633,32 @@ local tasklist_buttons = gears.table.join(
     awful.button({}, 5, function() awful.client.focus.byidx(-1) end)
 )
 
-local function set_wallpaper(s)
+function set_wallpaper(s)
     if beautiful.wallpaper then
         local wallpaper = beautiful.wallpaper
         if type(wallpaper) == 'function' then
             wallpaper = wallpaper(s)
         end
-        gears.wallpaper.maximized(wallpaper, s, true)
+        -- If wallpaper is a string, check if it's a color or file path
+        if type(wallpaper) == 'string' then
+            if wallpaper:find('^#') or not wallpaper:find('/') then
+                -- It's a color name or hex code
+                gears.wallpaper.set(wallpaper)
+            else
+                -- It's a file path
+                gears.wallpaper.maximized(wallpaper, s, true)
+            end
+        else
+            gears.wallpaper.maximized(wallpaper, s, true)
+        end
     end
 end
 
 -- Re-set wallpaper when a screen's geometry changes
 screen.connect_signal('property::geometry', set_wallpaper)
+
+-- Load theme overrides after set_wallpaper is defined
+reload_theme_overrides()
 
 awful.screen.connect_for_each_screen(function(s)
     -- Wallpaper
@@ -609,6 +701,7 @@ awful.screen.connect_for_each_screen(function(s)
             layout = wibox.layout.fixed.horizontal,
             mykeyboardlayout,
             wibox.widget.systray(),
+            brightness_widget,
             kbd_backlight_widget,
             audio_widget,
             wibox.widget.textbox(" | "),
@@ -729,6 +822,14 @@ local globalkeys = gears.table.join(
             naughty.suspend()
         end
     end, {description = 'toggle notifications', group = 'awesome'}),
+
+    -- Brightness control (Function keys)
+    awful.key({}, 'XF86MonBrightnessUp', function()
+        awful.spawn('sudo brightnessctl set +10%')
+    end, {description = 'increase brightness', group = 'awesome'}),
+    awful.key({}, 'XF86MonBrightnessDown', function()
+        awful.spawn('sudo brightnessctl set 10%-')
+    end, {description = 'decrease brightness', group = 'awesome'}),
 
     -- Prompt and launcher
     awful.key({modkey}, 'r', run, {description = 'run prompt', group = 'launcher'}),
