@@ -693,9 +693,13 @@ awful.screen.connect_for_each_screen(function(s)
         { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
             mykeyboardlayout,
+            wibox.widget.textbox(" | "),
             wibox.widget.systray(),
+            wibox.widget.textbox(" | "),
             brightness_widget,
+            wibox.widget.textbox(" | "),
             kbd_backlight_widget,
+            wibox.widget.textbox(" | "),
             audio_widget,
             wibox.widget.textbox(" | "),
             powerprofile_widget,
@@ -823,6 +827,20 @@ local globalkeys = gears.table.join(
     awful.key({}, 'XF86MonBrightnessDown', function()
         awful.spawn('sudo brightnessctl set 10%-')
     end, {description = 'decrease brightness', group = 'awesome'}),
+
+    -- Volume control (Function keys)
+    awful.key({}, 'XF86AudioRaiseVolume', function()
+        awful.spawn('pactl set-sink-volume @DEFAULT_SINK@ +5%')
+        update_audio_icon()
+    end, {description = 'increase volume', group = 'awesome'}),
+    awful.key({}, 'XF86AudioLowerVolume', function()
+        awful.spawn('pactl set-sink-volume @DEFAULT_SINK@ -5%')
+        update_audio_icon()
+    end, {description = 'decrease volume', group = 'awesome'}),
+    awful.key({}, 'XF86AudioMute', function()
+        awful.spawn('pactl set-sink-mute @DEFAULT_SINK@ toggle')
+        update_audio_icon()
+    end, {description = 'toggle mute', group = 'awesome'}),
 
     -- Prompt and launcher
     awful.key({modkey}, 'r', run, {description = 'run prompt', group = 'launcher'}),
