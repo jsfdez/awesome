@@ -470,7 +470,7 @@ powerprofile_widget:buttons(gears.table.join(
 
 -- Audio control widget
 local audio_widget = wibox.widget.textbox()
-audio_widget:set_text('🔊')
+audio_widget:set_text('🕪')
 
 local function get_volume()
     local handle = io.popen('pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null')
@@ -491,15 +491,15 @@ end
 
 local function update_audio_icon()
     if is_muted() then
-        audio_widget:set_text('🔇')
+        audio_widget:set_text('🕨')
     else
         local vol = get_volume()
         if vol == 0 then
-            audio_widget:set_text('🔇')
+            audio_widget:set_text('🕨')
         elseif vol < 50 then
-            audio_widget:set_text('🔉')
+            audio_widget:set_text('🕩')
         else
-            audio_widget:set_text('🔊')
+            audio_widget:set_text('🕪')
         end
     end
 end
